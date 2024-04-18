@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var activityMainBinding: ActivityMainBinding
 
-    private val days = (1..31).toList().toIntArray()
+    private val calendarManager = CalendarManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,11 +24,13 @@ class MainActivity : AppCompatActivity() {
         val activityMainView = activityMainBinding.root
         setContentView(activityMainView)
 
+        activityMainBinding.tvMonth.text = calendarManager.getTitle()
+
         val rvCalendar = activityMainBinding.rvCalendar
         val numberOfColumns = 7
         val layout = GridLayoutManager(applicationContext, numberOfColumns)
         rvCalendar.layoutManager = layout
-        val adapter = RecyclerListAdapter(days)
+        val adapter = RecyclerListAdapter(calendarManager.getDays())
         rvCalendar.adapter = adapter
     }
 
@@ -36,8 +38,9 @@ class MainActivity : AppCompatActivity() {
         var tvDay: TextView
 
         init {
+            val weeksCount = calendarManager.getWeeksCount()
             // 日付Viewの高さを指定
-            itemView.layoutParams.height = activityMainBinding.rvCalendar.height / 5
+            itemView.layoutParams.height = activityMainBinding.rvCalendar.height / weeksCount
             tvDay = binding.tvDay
         }
     }

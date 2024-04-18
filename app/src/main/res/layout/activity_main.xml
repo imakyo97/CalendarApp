@@ -10,14 +10,13 @@
 
 
     <TextView
-        android:id="@+id/tvmonth"
+        android:id="@+id/tvMonth"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:background="@drawable/textview_border"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
-        android:text="2024年1月"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,5 +27,5 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvmonth" />
+        app:layout_constraintTop_toBottomOf="@+id/tvMonth" />
 </androidx.constraintlayout.widget.ConstraintLayout>
