@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CalendarApp</string>
+    <string name="previous_month_button">previous month</string>
+    <string name="next_month_button">next month</string>
 </resources>
