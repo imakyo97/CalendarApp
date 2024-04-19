@@ -1,7 +1,9 @@
 package com.example.calendarapp
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +27,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(activityMainView)
 
         activityMainBinding.tvMonth.text = calendarManager.getTitle()
+        val calendarHeaderListener = CalendarHeaderListener()
+        activityMainBinding.btPreviousMonth.setOnClickListener(calendarHeaderListener)
+        activityMainBinding.btNextMonth.setOnClickListener(calendarHeaderListener)
 
         val rvCalendar = activityMainBinding.rvCalendar
         val numberOfColumns = 7
@@ -59,5 +64,27 @@ class MainActivity : AppCompatActivity() {
         override fun getItemCount(): Int {
             return listData.size
         }
+    }
+
+    private inner class CalendarHeaderListener: View.OnClickListener {
+        @SuppressLint("NotifyDataSetChanged")
+        override fun onClick(v: View?) {
+            when(v?.id) {
+                // < ボタン
+                activityMainBinding.btPreviousMonth.id -> {
+                    calendarManager.makePreviousMonth()
+                }
+                // > ボタン
+                activityMainBinding.btNextMonth.id -> {
+                    calendarManager.makeNextMonth()
+                }
+            }
+            activityMainBinding.tvMonth.text = calendarManager.getTitle()
+            // 新しいデータをアダプターに設定
+            activityMainBinding.rvCalendar.adapter = RecyclerListAdapter(calendarManager.getDays())
+            // RecyclerViewを更新
+            activityMainBinding.rvCalendar.adapter?.notifyDataSetChanged()
+        }
+
     }
 }
