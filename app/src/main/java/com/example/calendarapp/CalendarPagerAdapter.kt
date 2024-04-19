@@ -34,6 +34,6 @@ class CalendarPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
         // 年月にフォーマットして返す
         val locale = Locale("ja", "JP", "JP")
         val dateFormat = SimpleDateFormat("yyyy年M月", locale)
-        return dateFormat.format(calendar.time)
+        return dateFormat.format(temporaryCalendar.time)
     }
 }
