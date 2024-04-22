@@ -24,11 +24,13 @@ class MainActivity : AppCompatActivity() {
         val calendarOnPageChanger = CalendarOnPageChanger()
         activityMainBinding.calendarPager.registerOnPageChangeCallback(calendarOnPageChanger)
 
-        activityMainBinding.tvMonth.text = calendarPagerAdapter.getTitle(0)
-
         val calendarHeaderListener = CalendarHeaderListener()
         activityMainBinding.btPreviousMonth.setOnClickListener(calendarHeaderListener)
         activityMainBinding.btNextMonth.setOnClickListener(calendarHeaderListener)
+
+        // 初期表示をPagerの中央にする
+        val centerPosition = (CalendarPagerAdapter.PAGE_COUNT - 1) / 2
+        activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
     }
 
     private inner class CalendarOnPageChanger: ViewPager2.OnPageChangeCallback() {

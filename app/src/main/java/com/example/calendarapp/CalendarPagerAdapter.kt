@@ -11,7 +11,8 @@ class CalendarPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
     private val calendar = Calendar.getInstance()
 
     companion object {
-        const val PAGE_COUNT = 200
+        // 今日の月から前後1年分のページ数を設定
+        const val PAGE_COUNT = 25
     }
 
     override fun getItemCount(): Int {
@@ -20,7 +21,9 @@ class CalendarPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
 
     override fun createFragment(position: Int): Fragment {
         val calendar = calendar.clone() as Calendar
-        calendar.add(Calendar.MONTH, position)
+        // Pagerの中央に今日の月がくるようにカレンダーを作成
+        val calendarAddAmount = position - ((PAGE_COUNT - 1) / 2)
+        calendar.add(Calendar.MONTH, calendarAddAmount)
         return CalendarFragment(calendar)
     }
 
@@ -28,8 +31,10 @@ class CalendarPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
     fun getTitle(position: Int): String {
         // タイトル作成用にカレンダーを複製
         val temporaryCalendar = calendar.clone() as Calendar
+        // Pagerの中央に今日の月がくるようにカレンダーを作成
+        val calendarAddAmount = position - ((PAGE_COUNT - 1) / 2)
         // positionのカレンダーにする
-        temporaryCalendar.add(Calendar.MONTH, position)
+        temporaryCalendar.add(Calendar.MONTH, calendarAddAmount)
 
         // 年月にフォーマットして返す
         val locale = Locale("ja", "JP", "JP")
