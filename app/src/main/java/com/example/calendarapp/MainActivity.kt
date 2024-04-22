@@ -1,6 +1,5 @@
 package com.example.calendarapp
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
@@ -34,14 +33,50 @@ class MainActivity : AppCompatActivity() {
     }
 
     private inner class CalendarOnPageChanger: ViewPager2.OnPageChangeCallback() {
+        /* ドラッグ時のイベント呼び出し順
+        1. onPageScrollStateChanged state:1
+        2. onPageScrolled（複数回）
+        3. onPageScrollStateChanged state:2
+        4. onPageSelected
+        5. onPageScrolled（複数回）
+        6. onPageScrollStateChanged state:0
+        */
+
+        /* setCurrentItem(item:, smoothScroll)でのイベント呼び出し順
+        1. onPageScrollStateChanged state:2
+        2. onPageSelected
+        3. onPageScrolled
+        4. onPageScrollStateChanged state:0
+        */
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
             activityMainBinding.tvMonth.text = calendarPagerAdapter.getTitle(position)
         }
+
+        override fun onPageScrollStateChanged(state: Int) {
+            super.onPageScrollStateChanged(state)
+            // Page移動が完了した時
+            if (ViewPager2.SCROLL_STATE_IDLE == state) {
+                val currentPosition = activityMainBinding.calendarPager.currentItem
+                val centerPosition = (CalendarPagerAdapter.PAGE_COUNT - 1) / 2
+                when (currentPosition) {
+                    // 表示がPagerの左端まできた時
+                    0 -> {
+                        // 左端の年月が中央にくるようにする
+                        calendarPagerAdapter.addCalendarMonth(-centerPosition)
+                        activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
+                    }
+                    // 表示がPagerの右端まできた時
+                    CalendarPagerAdapter.PAGE_COUNT - 1 -> {
+                        calendarPagerAdapter.addCalendarMonth(centerPosition)
+                        activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
+                    }
+                }
+            }
+        }
     }
 
     private inner class CalendarHeaderListener: View.OnClickListener {
-        @SuppressLint("NotifyDataSetChanged")
         override fun onClick(v: View?) {
             when(v?.id) {
                 // < ボタン

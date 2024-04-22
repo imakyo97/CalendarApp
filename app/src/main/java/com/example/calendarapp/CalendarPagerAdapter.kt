@@ -41,4 +41,8 @@ class CalendarPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
         val dateFormat = SimpleDateFormat("yyyy年M月", locale)
         return dateFormat.format(temporaryCalendar.time)
     }
+
+    fun addCalendarMonth(amount: Int) {
+        calendar.add(Calendar.MONTH, amount)
+    }
 }
