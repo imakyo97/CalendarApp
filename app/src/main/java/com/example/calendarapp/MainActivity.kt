@@ -15,7 +15,7 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     companion object {
-        // 今日の月から前後1年分のページ数を設定
+        // 今月から前後1年分のページ数を設定
         const val PAGE_COUNT = 25
     }
 
@@ -49,9 +49,8 @@ class MainActivity : AppCompatActivity() {
     fun getTitle(position: Int): String {
         // タイトル作成用にカレンダーを複製
         val temporaryCalendar = calendar.clone() as Calendar
-        // Pagerの中央に今日の月がくるようにカレンダーを作成
+        // Pagerの中央に今月がくるようにカレンダーを編集
         val calendarAddAmount = position - ((PAGE_COUNT - 1) / 2)
-        // positionのカレンダーにする
         temporaryCalendar.add(Calendar.MONTH, calendarAddAmount)
 
         // 年月にフォーマットして返す
@@ -90,7 +89,6 @@ class MainActivity : AppCompatActivity() {
                 when (currentPosition) {
                     // 表示がPagerの左端まできた時
                     0 -> {
-                        // 左端の年月が中央にくるようにする
                         calendar.add(Calendar.MONTH, -centerPosition)
                         activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
                     }
@@ -131,10 +129,10 @@ class MainActivity : AppCompatActivity() {
 
         override fun createFragment(position: Int): Fragment {
             val calendar = calendar.clone() as Calendar
-            // Pagerの中央に今日の月がくるようにカレンダーを作成
+            // Pagerの中央に今月がくるようにカレンダーを作成
             val calendarAddAmount = position - ((PAGE_COUNT - 1) / 2)
             calendar.add(Calendar.MONTH, calendarAddAmount)
-            return CalendarFragment(calendar)
+            return CalendarFragment.newInstance(calendar)
         }
     }
 }

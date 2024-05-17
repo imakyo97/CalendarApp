@@ -1,25 +1,46 @@
 package com.example.calendarapp
 
 import android.icu.util.Calendar
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.calendarapp.databinding.DayItemBinding
 import com.example.calendarapp.databinding.FragmentCalendarBinding
 
-class CalendarFragment(calendar: Calendar) : Fragment() {
+class CalendarFragment : Fragment() {
     private lateinit var fragmentCalendarBinding: FragmentCalendarBinding
-    private val calendarManager = CalendarManager(calendar)
+    private lateinit var calendarManager: CalendarManager
 
+    companion object {
+        private const val CALENDAR = "calendar"
+
+        // newInstanceメソッドで引数を設定
+        fun newInstance(calendar: Calendar): CalendarFragment {
+            val fragment = CalendarFragment()
+            val args = Bundle()
+            args.putSerializable(CALENDAR, calendar)
+            fragment.arguments = args
+            return fragment
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        arguments?.let {
+            val calendar = it.getSerializable(CALENDAR, Calendar::class.java) as Calendar
+            calendarManager = CalendarManager(calendar)
+        }
+
         fragmentCalendarBinding = FragmentCalendarBinding.inflate(inflater, container, false)
 
         val rvCalendar = fragmentCalendarBinding.rvCalendar
