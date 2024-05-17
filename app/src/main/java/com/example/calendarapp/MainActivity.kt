@@ -1,25 +1,23 @@
 package com.example.calendarapp
 
-import android.icu.util.Calendar
 import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.example.calendarapp.databinding.ActivityMainBinding
-import java.text.SimpleDateFormat
-import java.util.Locale
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        // 今月から前後1年分のページ数を設定
-        const val PAGE_COUNT = 25
-    }
 
-    private val calendar = Calendar.getInstance()
+    private val viewModel: CalendarViewModel by viewModels()
 
     private lateinit var activityMainBinding: ActivityMainBinding
     private lateinit var calendarPagerAdapter: CalendarPagerAdapter
@@ -31,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         val activityMainView = activityMainBinding.root
         setContentView(activityMainView)
 
-        calendarPagerAdapter = CalendarPagerAdapter(this@MainActivity, calendar)
+        calendarPagerAdapter = CalendarPagerAdapter(this@MainActivity)
         activityMainBinding.calendarPager.adapter = calendarPagerAdapter
         val calendarOnPageChanger = CalendarOnPageChanger()
         activityMainBinding.calendarPager.registerOnPageChangeCallback(calendarOnPageChanger)
@@ -40,23 +38,17 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.btPreviousMonth.setOnClickListener(calendarHeaderListener)
         activityMainBinding.btNextMonth.setOnClickListener(calendarHeaderListener)
 
-        // 初期表示をPagerの中央にする
-        val centerPosition = (PAGE_COUNT - 1) / 2
-        activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
-    }
-
-    // カレンダーのタイトル
-    fun getTitle(position: Int): String {
-        // タイトル作成用にカレンダーを複製
-        val temporaryCalendar = calendar.clone() as Calendar
-        // Pagerの中央に今月がくるようにカレンダーを編集
-        val calendarAddAmount = position - ((PAGE_COUNT - 1) / 2)
-        temporaryCalendar.add(Calendar.MONTH, calendarAddAmount)
-
-        // 年月にフォーマットして返す
-        val locale = Locale("ja", "JP", "JP")
-        val dateFormat = SimpleDateFormat("yyyy年M月", locale)
-        return dateFormat.format(temporaryCalendar.time)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { uiState ->
+                    activityMainBinding.tvMonth.text = uiState.date
+                    activityMainBinding.calendarPager.setCurrentItem(
+                        uiState.position,
+                        uiState.hasAnimation
+                    )
+                }
+            }
+        }
     }
 
     private inner class CalendarOnPageChanger : ViewPager2.OnPageChangeCallback() {
@@ -75,29 +67,12 @@ class MainActivity : AppCompatActivity() {
         3. onPageScrolled
         4. onPageScrollStateChanged state:0
         */
-        override fun onPageSelected(position: Int) {
-            super.onPageSelected(position)
-            activityMainBinding.tvMonth.text = getTitle(position)
-        }
-
         override fun onPageScrollStateChanged(state: Int) {
             super.onPageScrollStateChanged(state)
             // Page移動が完了した時
             if (ViewPager2.SCROLL_STATE_IDLE == state) {
                 val currentPosition = activityMainBinding.calendarPager.currentItem
-                val centerPosition = (PAGE_COUNT - 1) / 2
-                when (currentPosition) {
-                    // 表示がPagerの左端まできた時
-                    0 -> {
-                        calendar.add(Calendar.MONTH, -centerPosition)
-                        activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
-                    }
-                    // 表示がPagerの右端まできた時
-                    PAGE_COUNT - 1 -> {
-                        calendar.add(Calendar.MONTH, centerPosition)
-                        activityMainBinding.calendarPager.setCurrentItem(centerPosition, false)
-                    }
-                }
+                viewModel.didChangePage(currentPosition)
             }
         }
     }
@@ -107,13 +82,11 @@ class MainActivity : AppCompatActivity() {
             when (v?.id) {
                 // < ボタン
                 activityMainBinding.btPreviousMonth.id -> {
-                    val previousPosition = activityMainBinding.calendarPager.currentItem - 1
-                    activityMainBinding.calendarPager.setCurrentItem(previousPosition, true)
+                    viewModel.previousMonth()
                 }
                 // > ボタン
                 activityMainBinding.btNextMonth.id -> {
-                    val nextPosition = activityMainBinding.calendarPager.currentItem + 1
-                    activityMainBinding.calendarPager.setCurrentItem(nextPosition, true)
+                    viewModel.nextMonth()
                 }
             }
         }
@@ -121,17 +94,13 @@ class MainActivity : AppCompatActivity() {
 
     private inner class CalendarPagerAdapter(
         activity: FragmentActivity,
-        private val calendar: Calendar
     ) : FragmentStateAdapter(activity) {
         override fun getItemCount(): Int {
-            return PAGE_COUNT
+            return CalendarViewModel.PAGE_COUNT
         }
 
         override fun createFragment(position: Int): Fragment {
-            val calendar = calendar.clone() as Calendar
-            // Pagerの中央に今月がくるようにカレンダーを作成
-            val calendarAddAmount = position - ((PAGE_COUNT - 1) / 2)
-            calendar.add(Calendar.MONTH, calendarAddAmount)
+            val calendar = viewModel.cloneCalendarMonth(position)
             return CalendarFragment.newInstance(calendar)
         }
     }
