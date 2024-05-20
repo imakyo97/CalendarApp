@@ -9,18 +9,24 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.calendarapp.databinding.DayItemBinding
 import com.example.calendarapp.databinding.FragmentCalendarBinding
+import kotlinx.coroutines.launch
 
 class CalendarFragment : Fragment() {
     private lateinit var fragmentCalendarBinding: FragmentCalendarBinding
-    private lateinit var calendarManager: CalendarManager
+    private lateinit var factory: CalendarFragmentViewModel.Factory
+
+    private val viewModel: CalendarFragmentViewModel by viewModels { factory }
 
     companion object {
         private const val CALENDAR = "calendar"
-
         // newInstanceメソッドで引数を設定
         fun newInstance(calendar: Calendar): CalendarFragment {
             val fragment = CalendarFragment()
@@ -38,36 +44,54 @@ class CalendarFragment : Fragment() {
     ): View {
         arguments?.let {
             val calendar = it.getSerializable(CALENDAR, Calendar::class.java) as Calendar
-            calendarManager = CalendarManager(calendar)
+            factory = CalendarFragmentViewModel.Factory(calendar)
         }
 
         fragmentCalendarBinding = FragmentCalendarBinding.inflate(inflater, container, false)
+        return fragmentCalendarBinding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val rvCalendar = fragmentCalendarBinding.rvCalendar
-        val numberOfColumns = 7
-        val layout = GridLayoutManager(this@CalendarFragment.context, numberOfColumns)
+        val layout = GridLayoutManager(this@CalendarFragment.context, CalendarFragmentViewModel.NUMBER_OF_COLUMNS)
         rvCalendar.layoutManager = layout
-        val adapter = RecyclerListAdapter(calendarManager.getDays())
+        val adapter = RecyclerListAdapter()
         rvCalendar.adapter = adapter
 
         // RecyclerViewのスクロールをOFFにする
         rvCalendar.suppressLayout(true)
 
-        return fragmentCalendarBinding.root
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { listData ->
+                    adapter.setListData(listData)
+                }
+            }
+        }
     }
 
     private inner class RecyclerListViewHolder(binding: DayItemBinding): RecyclerView.ViewHolder(binding.root) {
         var tvDay: TextView
 
         init {
-            val weeksCount = calendarManager.getWeeksCount()
+            val weeksCount = viewModel.getWeeksCount()
             // 日付Viewの高さを指定
             itemView.layoutParams.height = fragmentCalendarBinding.rvCalendar.height / weeksCount
             tvDay = binding.tvDay
         }
     }
 
-    private inner class RecyclerListAdapter(private val listData: IntArray): RecyclerView.Adapter<RecyclerListViewHolder>() {
+    private inner class RecyclerListAdapter(): RecyclerView.Adapter<RecyclerListViewHolder>() {
+        private val listData = mutableListOf<Int>()
+
+        fun setListData(data: IntArray) {
+            listData.clear()
+            listData.addAll(data.toList())
+            notifyDataSetChanged()
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListViewHolder {
             val binding = DayItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             return RecyclerListViewHolder(binding)

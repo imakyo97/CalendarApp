@@ -2,15 +2,15 @@ package com.example.calendarapp
 
 import android.icu.util.Calendar
 
-class CalendarManager(private val calendar: Calendar) {
-    fun getDays(): IntArray {
+class CalendarManager() {
+    fun getDays(calendar: Calendar): IntArray {
         // 日付配列の作成用にカレンダーを複製
         val temporaryCalendar = calendar.clone() as Calendar
 
         // 曜日の数
         val dayOfWeekCount = 7
         // カレンダーに表示する日付の数
-        val calendarDaysCount = getWeeksCount() * dayOfWeekCount
+        val calendarDaysCount = getWeeksCount(calendar) * dayOfWeekCount
         // カレンダーの日付を1日にする
         temporaryCalendar.set(Calendar.DATE, 1)
         // 曜日を取得（日曜日の1から土曜日の7までの数字）
@@ -29,7 +29,7 @@ class CalendarManager(private val calendar: Calendar) {
     }
 
     // カレンダーに表示される週の数
-    fun getWeeksCount(): Int {
+    fun getWeeksCount(calendar: Calendar): Int {
         return calendar.getActualMaximum(Calendar.WEEK_OF_MONTH)
     }
 }
